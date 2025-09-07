@@ -1,5 +1,6 @@
 import os
 import re
+from tkinter import dialog
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
@@ -7,9 +8,11 @@ from shiboken2 import wrapInstance
 import maya.OpenMayaUI as omui
 from . import saveToolfn
 
-class ToolWindow(QDialog):
+class toolWindow(QDialog):
     def __init__(self, *args, **kwargs):
-        super(ToolWindow, self).__init__(*args, **kwargs)
+        super(toolWindow, self).__init__(*args, **kwargs)
+        self.s_window = None
+        self.o_window = None
         self.setWindowTitle('Save Tool')
         self.resize(300,150)
 
@@ -53,18 +56,18 @@ class ToolWindow(QDialog):
         self.tool_layout.addWidget(self.version_listWidget, 4, 0, 1, 3)
 
         self.path = r"C:\projects\PYSTD\work\shots"
-        self.load_sequences()
-        self.seq_listWidget.currentItemChanged.connect(self.load_shots)
-        self.shot_listWidget.currentItemChanged.connect(self.load_Department)
+        self.loadSequences()
+        self.seq_listWidget.currentItemChanged.connect(self.loadShots)
+        self.shot_listWidget.currentItemChanged.connect(self.loadDepartment)
 
-    def load_sequences(self):
+    def loadSequences(self):
         if os.path.exists(self.path):
             for seq in sorted(os.listdir(self.path)):
                 full_path = os.path.join(self.path, seq)
                 if os.path.isdir(full_path) and re.match(r"^seq\d+$", seq):
                     self.seq_listWidget.addItem(seq)
 
-    def load_shots(self, current):
+    def loadShots(self, current):
         self.shot_listWidget.clear()
         if current:
             seq_name = current.text()
@@ -75,7 +78,7 @@ class ToolWindow(QDialog):
                     if os.path.isdir(full_path) and re.match(r"^shot\d+$", shot):
                         self.shot_listWidget.addItem(shot)
 
-    def load_Department(self, current):
+    def loadDepartment(self, current):
         self.department_combobox.clear()
         self.department_combobox.addItem('select')
         if current:
@@ -95,13 +98,68 @@ class ToolWindow(QDialog):
         self.main_layout.addWidget(self.opt_widget)
 
         self.save_button = QPushButton('Save')
+        self.save_button.clicked.connect(self.saveWindowPopup)
         self.open_button = QPushButton('Open')
+        self.open_button.clicked.connect(self.openWindowPopup)
         self.cancel_button = QPushButton('Cancel')
         self.cancel_button.clicked.connect(self.close)
-
+        
         self.opt_layout.addWidget(self.save_button)
         self.opt_layout.addWidget(self.open_button)
         self.opt_layout.addWidget(self.cancel_button)
+
+    def saveWindowPopup(self):
+        if self.s_window is None:
+            self.s_window = saveWindow(parent = self)
+        self.s_window.show()
+
+    def openWindowPopup(self):
+        if self.o_window is None:
+            self.o_window = openWindow(parent = self)
+        self.o_window.show()
+ 
+class saveWindow(QDialog):
+    def __init__(self, *args, **kwargs):
+        super(saveWindow, self).__init__(*args, **kwargs)
+        self.setWindowTitle('Save')
+        self.set_save_label = QLabel("Are you sure to save?")
+
+        self.save_layout = QVBoxLayout()
+        self.setLayout(self.save_layout)
+
+        self.save_layout.addWidget(self.set_save_label)
+
+        self.confirm_button = QPushButton('Confirm')
+        self.close_button = QPushButton('Cancel')
+        self.save_layout.addWidget(self.confirm_button)
+        self.confirm_button.clicked.connect(self.save)
+        self.save_layout.addWidget(self.close_button)
+        self.close_button.clicked.connect(self.close)
+
+    def save(self):
+        seq = self.parent().seq_listWidget.currentItem().text()
+        shot = self.parent().shot_listWidget.currentItem().text()
+        department = self.parent().department_combobox.currentText()
+        base_path = self.parent().path
+
+        save_path = saveToolfn.saveFile(seq, shot, department,base_path)
+
+class openWindow(QDialog):
+    def __init__(self, *args, **kwargs):
+        super(openWindow, self).__init__(*args, **kwargs)
+        self.setWindowTitle('Open')
+        self.set_open_label = QLabel("Are you sure to open?")
+
+        self.open_layout = QVBoxLayout()
+        self.setLayout(self.open_layout)
+
+        self.open_layout.addWidget(self.set_open_label)
+
+        self.confirm_button = QPushButton('Confirm')
+        self.popup_close_button = QPushButton('Cancel')
+        self.open_layout.addWidget(self.confirm_button)
+        self.open_layout.addWidget(self.popup_close_button)
+        self.popup_close_button.clicked.connect(self.close)
 
 def close():
     ui.close()
@@ -116,5 +174,5 @@ def run():
     maya_ptr = omui.MQtUtil.mainWindow()
     ptr = wrapInstance(int(maya_ptr), QWidget)
 
-    ui = ToolWindow(parent = ptr)
+    ui = toolWindow(parent = ptr)
     ui.show()

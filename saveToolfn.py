@@ -1,11 +1,14 @@
-import maya.cmds as cmds
 import os
+import maya.cmds as cmds
 
-def fileSaving(new_name):
-    current = cmds.file(q=True, sn=True)
-    new_name = ()
+def getSceneFolder(base_path, seq, shot, department):
+    return os.path.join(base_path, seq, shot, department, "maya", "scenes")
 
-    current_dir = os.path.dirname(current)
-    cmds.file(rename= new_name)
-    cmds.file(save=True, force=True, type="mayaAscii")
-    print(new_name)
+def saveFile(seq, shot, department, base_path):
+    save_dir = getSceneFolder(base_path, seq, shot, department)
+
+    filename = f"{seq}_{shot}_{department}.ma"
+    save_path = os.path.join(save_dir, filename)
+
+    cmds.file(rename=save_path)
+    cmds.file(save=True, type="mayaAscii")  
