@@ -1,6 +1,5 @@
 import os
 import re
-from tkinter import dialog
 from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
@@ -140,13 +139,13 @@ class toolWindow(QDialog):
         global s_ui
         if s_ui is None:
             s_ui = saveWindow(parent = self)
-        s_ui.show()
+        s_ui.exec()
 
     def openWindowPopup(self):
         global o_ui
         if o_ui is None:
             o_ui = openWindow(parent = self)
-        o_ui.show()
+        o_ui.exec()
  
 class saveWindow(QDialog):
     def __init__(self, *args, **kwargs):
