@@ -9,6 +9,13 @@ import maya.OpenMayaUI as omui
 from . import saveToolfn
 import maya.cmds as cmds
 
+def find_project_path(base_root=r"C:\projects"):
+    for proj in os.listdir(base_root):
+        proj_path = os.path.join(base_root, proj, "work", "shots")
+        if os.path.isdir(proj_path):
+            return proj_path
+    return None
+
 class toolWindow(QDialog):
     def __init__(self, *args, **kwargs):
         super(toolWindow, self).__init__(*args, **kwargs)
@@ -20,6 +27,7 @@ class toolWindow(QDialog):
 
         self.initMainWidgets()
         self.initButtonWidgets()
+        
 
     def initMainWidgets(self):
         self.tool_widget = QWidget()
@@ -53,8 +61,8 @@ class toolWindow(QDialog):
         self.tool_layout.addWidget(self.department_combobox,1,2, alignment= Qt.AlignTop)
         self.tool_layout.addWidget(self.version_label,3,0)       
         self.tool_layout.addWidget(self.version_listWidget, 4, 0, 1, 3)
-
-        self.path = r"C:\projects\PYSTD\work\shots"
+        
+        self.path = find_project_path()
         self.loadSequences()
         self.seq_listWidget.currentItemChanged.connect(self.loadShots)
         self.shot_listWidget.currentItemChanged.connect(self.loadDepartment)
